@@ -143,12 +143,7 @@ midAxisHolderH = 3.3;
 // how far should the snapping axis that holds the music cylinder be?
 musicAxisHolderH = 3.4;
 
-// pulley
-pulleySlack = 0.4;
-pulleyH = 10;
-pulleyR = crankAxisR+wall_width;
-// cutout to get Pulley in
-pulleySnapL=1.2;
+
 
 
 // for extra distance from axis to gears
@@ -173,6 +168,13 @@ crankLength = 18;
 crankAxisCutAwayH = 4;
 crankExtraH=4;
 crankH=crankExtraH+2*crankAxisCutAwayH;
+
+// pulley
+pulleySlack = 0.4;
+pulleyH = 10;
+pulleyR = crankAxisR+wall_width;
+// cutout to get Pulley in
+pulleySnapL=1.2;
 
 // Constants
 // the density of PLA (or whatever plastic you are using) in kg/m3
@@ -268,8 +270,7 @@ module MyAxisSnapCutout(h, z=0, mirr=0,extra=epsilonCSG) {
 }
 
 // Controls the holder on the side of the wall
-module MyAxisSnapHolder(h, x=0, y=0, z=0, mirr=0,extra=wall_width, h2=0)
-{
+module MyAxisSnapHolder(h, x=0, y=0, z=0, mirr=0,extra=wall_width, h2=0) {
 	rotate([-90,0,0])
 	mirror([0,0,mirr])
 	translate([x,-z,-extra-y])
@@ -285,14 +286,11 @@ module MyAxisSnapHolder(h, x=0, y=0, z=0, mirr=0,extra=wall_width, h2=0)
 }
 
 // The red gear.
-module MyGear(n, hPos, hNeg, mirr=0)
-{
-	if (DEBUG_GEARS)
-	{
+module MyGear(n, hPos, hNeg, mirr=0) {
+	if (DEBUG_GEARS) {
 		translate([0,0,-hNeg]) cylinder(r=(n/diametral_pitch)/2, h=hPos+hNeg, center = false);
 	}
-	if (!DEBUG_GEARS)
-	{
+	if (!DEBUG_GEARS) {
 		HBgearWithDifferentLen(n=n, mirr=mirr, hPos=hPos, hNeg=hNeg, tol=gear_tolerance);
 	}
 }
@@ -301,12 +299,11 @@ module MyGear(n, hPos, hNeg, mirr=0)
 /* based on Emmet's herringbone gear taken from thing: http://www.thingiverse.com/thing:34778 */
 
 // The teeth on the sides of the different gears
-module HBgearWithDifferentLen(n,hPos,hNeg,mirr=0, tol=0.25)
-{
+module HBgearWithDifferentLen(n,hPos,hNeg,mirr=0, tol=0.25) {
 twistScale=50;
 mirror([mirr,0,0])
 translate([0,0,0])
-union(){
+union() {
 	mirror([0,0,1])
 	gear(number_of_teeth=n,
 		diametral_pitch=diametral_pitch,
@@ -331,7 +328,7 @@ union(){
 		pressure_angle=20,
 		twist=hPos*twistScale/n,
 		slices=10);
-}
+	}
 }
 
 
@@ -341,10 +338,15 @@ echo(NoteToFrequ(9, 4, 0));
 
 //// SPECFIC functions
 function TeethLen(x) =
-	1000*LengthOfTooth(NoteToFrequ(LetterToNoteIndex(teethNotes[x*3]),
+	1000 * LengthOfTooth(
+		NoteToFrequ(
+			LetterToNoteIndex(teethNotes[x*3]),
 			LetterToDigit(teethNotes[x*3+2]),
 			AccidentalToNoteShift(teethNotes[x*3+1])),
-			teethHeight/1000, E_PLA, ro_PLA);
+			teethHeight/1000,
+			E_PLA,
+			ro_PLA
+		);
 
 
 
@@ -354,55 +356,68 @@ function TeethLen(x) =
 // h m
 // E N/m2
 // ro kg/m3
-function LengthOfTooth(f, h, E, ro) = sqrt((gammaTooth*gammaTooth*h/(4*PI*f))*sqrt(E/(3*ro)));
+function LengthOfTooth(f, h, E, ro) =
+	sqrt((gammaTooth*gammaTooth*h/(4*PI*f))*sqrt(E/(3*ro)));
 
-function NoteToFrequ(note, octave, modification) = baseFrequC0*pow(2, octave)*pow(2, (note+modification)/12);
+function NoteToFrequ(note, octave, modification) =
+	baseFrequC0*pow(2, octave)*pow(2, (note+modification)/12);
 
-function AccidentalToNoteShift(l) =
-l=="#"?1:
-l=="b"?-1:
-l==" "?0:
-INVALID_ACCIDENTAL_CHECK_teethNotes();
+/*
+	Apparently we have to use the ternary operator in functions.
+	This returns the accidental shift given what the character in the note string
+	says it should be.
+	Written with switch statement it would be
+		switch(char) {
+			case "#":
+				return 1
+			case "b"
+				return -1
+			case " "
+				return 0
+			default
+				return INVALID_NOTE_CHECK_teethNotes()
+		}
+*/
+function AccidentalToNoteShift(char) =
+	char == "#" ? 1 :
+	char == "b" ? -1 :
+	char == " " ? 0 :
+	INVALID_ACCIDENTAL_CHECK_teethNotes();
 
-// allow B and H
+// allow B and H why??
 // todo allow big and small letters
-function LetterToNoteIndex(l) =
-l=="C"?0:
-l=="D"?2:
-l=="E"?4:
-l=="F"?5:
-l=="G"?7:
-l=="A"?9:
-l=="H"?11:
-l=="B"?11:
-INVALID_NOTE_CHECK_teethNotes();
+function LetterToNoteIndex(char) =
+	char == "C" ? 0 :
+	char == "D" ? 2 :
+	char == "E" ? 4 :
+	char == "F" ? 5 :
+	char == "G" ? 7 :
+	char == "A" ? 9 :
+	char == "H" ? 11 :
+	char == "B" ? 11 :
+	INVALID_NOTE_CHECK_teethNotes();
 
-function LetterToDigit(l) =
-l=="0"?0:
-l=="1"?1:
-l=="2"?2:
-l=="3"?3:
-l=="4"?4:
-l=="5"?5:
-l=="6"?6:
-l=="7"?7:
-l=="8"?8:
-l=="9"?9:
-INVALID_DIGIT_IN_OCTAVE_CHECK_teethNotes();
+function LetterToDigit(char) =
+	char == "0" ? 0 :
+	char == "1" ? 1 :
+	char == "2" ? 2 :
+	char == "3" ? 3 :
+	char == "4" ? 4 :
+	char == "5" ? 5 :
+	char == "6" ? 6 :
+	char == "7" ? 7 :
+	char == "8" ? 8 :
+	char == "9" ? 9 :
+	INVALID_DIGIT_IN_OCTAVE_CHECK_teethNotes();
 
-
-
-
-
-module Pin()
-{
+pinColor = [.8, .3, .7];
+module Pin() {
 	difference()
 	{
 		translate([-pinStepX/2,-pinD/2,-pinHeight])
-		cube([pinStepX+4*teethGap, pinD, 2*(pinHeight+0.15)],center=false);
-
-translate([pinStepX/2,0,0])
-		rotate([0,-35,0]) translate([4.0*pinStepX,0,0]) cube([8*pinStepX,8*pinStepX,8*pinStepX],center=true);
+		color(pinColor)cube([pinStepX+4*teethGap, pinD, 2*(pinHeight+0.15)],center=false);
+		translate([pinStepX/2,0,0])
+		rotate([0,-35,0]) translate([4.0*pinStepX,0,0]) color(pinColor)cube([8*pinStepX,8*pinStepX,8*pinStepX],center=true);
 	}
 }
 
@@ -637,15 +652,14 @@ paths=[[0,1,2,3]]);
 
 // music cylinder and gear
 if (GENERATE_MUSIC_CYLINDER)
+
 {
 	translate([FOR_PRINT?-1.5*(musicCylinderRadius+addendum):0,FOR_PRINT?(crankDirection ? -1 : 1)*-((musicCylinderRadius+addendum)+gearBoxW):0, FOR_PRINT?gearHeight/2-gear_gap:0])
 	rotate([FOR_PRINT?180:-90,0,0])
 		translate([0,0,-(gear_gap)])
-		difference()
-		{
-			union()
-			{
-				MyGear(n=musicCylinderGearTeeth, hPos = gearHeight/2, hNeg=gearHeight/2+gear_gap);
+		difference() {
+			union() {
+				    color([.5,.1,1])MyGear(n=musicCylinderGearTeeth, hPos = gearHeight/2, hNeg=gearHeight/2+gear_gap);
 				translate([0,0,-gearHeight/2-gear_gap/2]) cylinder(h=gear_gap+epsilonCSG, r2=musicCylinderRadius-addendum, r1=musicCylinderRadius-addendum+gear_gap);
 				rotate([0, 180,0])
 translate([0,0,teethGap+gearHeight/2])
