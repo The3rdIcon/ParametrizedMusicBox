@@ -67,7 +67,6 @@ MusicCylinderNamePosition=0; // [0:top, 1:bottom]
 // the width of all the walls in the design.
 wall_width=2;
 
-
 // Teeth config
 // how many vibrating teeth should there be? (also number of available notes)
 // You can use the output of the generator for this field:
@@ -413,15 +412,16 @@ module MusicCylinder(extra=0)
 	translate([0,0,-extra]) cylinder(r = musicCylinderRadius, h = teethGap+musicH+extra, center=false, $fn=128);
     // controls where the pins are placed
 	translate([0,0,teethGap])
+	// Go through the "song" and for every X that is found we want to place a pin
+	// at that location.
 	for (x = [0:notes_count-1], y = [0:time_slot_count-1])	{
+		
 		assign(index = y*notes_count + x)
 		{
-			if (pins[index] == "X")
-			{
-
+			if (pins[index] == "X") {
 				rotate([0,0, y * pinStepY])
-					translate([musicCylinderRadius, 0, (0.5+x)*pinStepX]) rotate([0,90,0])
-							Pin();
+				translate([musicCylinderRadius, 0, (0.5+x)*pinStepX]) rotate([0,90,0])
+				Pin();
 			}
 		}
 	}
