@@ -410,134 +410,117 @@ function LetterToDigit(char) =
 	char == "9" ? 9 :
 	INVALID_DIGIT_IN_OCTAVE_CHECK_teethNotes();
 
-pinColor = [.8, .3, .7];
+// Sets the color of the pins in the preview
+pinColor = [0, 1, 0];
 module Pin() {
-	difference()
-	{
+	difference() {
 		translate([-pinStepX/2,-pinD/2,-pinHeight])
-		color(pinColor)cube([pinStepX+4*teethGap, pinD, 2*(pinHeight+0.15)],center=false);
+		color(pinColor)
+		cube([pinStepX+4*teethGap, pinD, 2*(pinHeight+0.15)],center=false);
+
 		translate([pinStepX/2,0,0])
-		rotate([0,-35,0]) translate([4.0*pinStepX,0,0]) color(pinColor)cube([8*pinStepX,8*pinStepX,8*pinStepX],center=true);
+		rotate([0,-35,0])
+		translate([4.0*pinStepX,0,0])
+		color(pinColor)
+		cube([8*pinStepX,8*pinStepX,8*pinStepX],center=true);
 	}
 }
 
+// Sets the color of the music cylinder
+musicCylinderColor = [1, .5, .2];
+module MusicCylinder(extra=0) {
+	translate([0,0,-extra])
+	color(musicCylinderColor)
+	cylinder(r = musicCylinderRadius, h = teethGap+musicH+extra, center=false, $fn=128);
 
-
-module MusicCylinder(extra=0)
-{
-	translate([0,0,-extra]) cylinder(r = musicCylinderRadius, h = teethGap+musicH+extra, center=false, $fn=128);
-    // controls where the pins are placed
+	// controls where the pins are placed
 	translate([0,0,teethGap])
 	for (x = [0:notes_count-1], y = [0:time_slot_count-1])	{
-		assign(index = y*notes_count + x)
-		{
-			if (pins[index] == "X")
-			{
-
-				rotate([0,0, y * pinStepY])
-					translate([musicCylinderRadius, 0, (0.5+x)*pinStepX]) rotate([0,90,0])
-							Pin();
-			}
+		index = y * notes_count + x;
+		if (pins[index] == "X") {
+			rotate([0,0, y * pinStepY])
+			translate([musicCylinderRadius, 0, (0.5+x)*pinStepX]) rotate([0,90,0])
+			Pin();
 		}
 	}
 }
 
-module BoltHole()
-{
-difference()
-    {
-        hull()
-        {
-        cylinder(teethHolderH, r = boltHoleOuterRadius);
-        translate([0,-teethHolderW,0]) cube([teethHolderH, teethHolderW, teethHolderH]);
-        }
-	cylinder(teethHolderH, r = boltHoleInnerRadius);
-    }
+
+module BoltHole() {
+	difference() {
+	  hull() {
+	    cylinder(teethHolderH, r = boltHoleOuterRadius);
+	    translate([0,-teethHolderW,0])
+			cube([teethHolderH, teethHolderW, teethHolderH]);
+	  }
+		cylinder(teethHolderH, r = boltHoleInnerRadius);
+  }
 }
 
-module MusicBox()
-{
-    // the comb
+// Generates the case I think
+module MusicBox() {
+  // the comb
 	translate([teethHolderW+maxTeethL,0,0])
-
 	rotate([180,0,0])
-	for (x = [0:notes_count-1])
-	{
-		assign(ll = TeethLen(x))
-		{
-			translate([-maxTeethL, x * pinStepX + teethGap, 0])
-			{
-				// teeth holder
-				assign (leftAdd = (x == 0) ? gearBoxW : 0, rightAdd = (x == notes_count-1) ? wall_width/2+gear_gap : 0)
-				{
-				translate([-(teethHolderW), epsilonCSG-leftAdd, 0])
-					cube([teethHolderW+maxTeethL-ll, pinStepX+2*epsilonCSG+leftAdd+rightAdd, teethHolderH]);
-				}
 
+	for (x = [0 : notes_count-1]) {
+		ll = TeethLen(x);
+		translate([-maxTeethL, x * pinStepX + teethGap, 0])	{
+			// teeth holder
+			leftAdd = (x == 0) ? gearBoxW : 0;
+			rightAdd = (x == notes_count-1) ? wall_width/2+gear_gap : 0;
+			translate([-(teethHolderW), epsilonCSG-leftAdd, 0])
+			cube([teethHolderW+maxTeethL-ll, pinStepX+2*epsilonCSG+leftAdd+rightAdd, teethHolderH]);
 
-				// teeth
-				translate([-teethHolderW/2, teethGap,0])
-				color([0,1,0])cube([maxTeethL+teethHolderW/2, teethW, teethHeight]);
-			}
+			// teeth
+			translate([-teethHolderW/2, teethGap,0])
+			color([0,1,0])
+			cube([maxTeethL+teethHolderW/2, teethW, teethHeight]);
 		}
 	}
-    translate([2.5*wall_width,17,-teethHolderH])
-    BoltHole();
-    translate([2.5*wall_width,-74,-teethHolderH])
-    mirror([0,1,0])
-    BoltHole();
+  translate([2.5*wall_width,17,-teethHolderH])
+  BoltHole();
+  translate([2.5*wall_width,-74,-teethHolderH])
+  mirror([0,1,0])
+  BoltHole();
 }
 
-module slide()
-{
-difference()
-{
-hull()
-{
-//translate([2.5*wall_width,5*gearHeight+wall_width,-teethHolderW])
-cylinder(5, r = boltHoleOuterRadius);
-translate([40,0,0])
-cylinder(5, r = boltHoleOuterRadius);
-}
-hull()
-{
-//translate([2.5*wall_width,5*gearHeight+wall_width,-teethHolderW])
-cylinder(6, r = boltHoleInnerRadius);
-translate([40,0,0])
-cylinder(6, r = boltHoleInnerRadius);
-}
-}
-}
-
-
-mirror ([0, FOR_PRINT?crankDirection:0,0])
-{
-// case shape
-
-if (GENERATE_CASE)
-{
-	translate([0,20,FOR_PRINT?-negXEnd*sin(cylinderGearTeethAngle):0])
-	intersection()
-	{
-		if (FOR_PRINT)
-		{
-			//translate([0,0, 500+negXEnd*sin(cylinderGearTeethAngle)]) cube([1000, 1000, 1000], center=true);
-
-			assign(maxX = max(posXEnd, -negXEnd))
-			translate([0,0, 2*frameH+negXEnd*sin(cylinderGearTeethAngle)]) cube([3*maxX, 2*frameW, 4*frameH], center=true);
+module slide() {
+	difference() {
+		hull() {
+			cylinder(5, r = boltHoleOuterRadius);
+			translate([40,0,0])
+			cylinder(5, r = boltHoleOuterRadius);
 		}
-	rotate([FOR_PRINT?180:0, FOR_PRINT?-cylinderGearTeethAngle:0,0])
-	{
+		hull() {
+			cylinder(6, r = boltHoleInnerRadius);
+			translate([40,0,0])
+			cylinder(6, r = boltHoleInnerRadius);
+		}
+	}
+}
 
-	difference()
-	{
-		union()
-		{
 
-		// PIANO :)
-
-		translate([-(noteExtendX+musicCylinderRadiusX),-(gearHeight/2+gear_gap+teethGap),0])
-			rotate([0,-cylinderGearTeethAngle*1,0]){
+mirror ([0, FOR_PRINT?crankDirection:0,0]) {
+// case shape
+	if (GENERATE_CASE) {
+		translate([0,20,FOR_PRINT?-negXEnd*sin(cylinderGearTeethAngle):0])
+		intersection() {
+			if (FOR_PRINT) {
+				maxX = max(posXEnd, -negXEnd);
+				translate([0,0, 2*frameH+negXEnd*sin(cylinderGearTeethAngle)])
+				cube([3*maxX, 2*frameW, 4*frameH], center=true);
+			}
+			rotate([FOR_PRINT?180:0, FOR_PRINT?-cylinderGearTeethAngle:0,0]) {
+				difference() {
+					union() {
+						// PIANO :)
+						translate([
+							-(noteExtendX+musicCylinderRadiusX),
+							-(gearHeight/2+gear_gap+teethGap),
+							0]
+						)
+						rotate([0,-cylinderGearTeethAngle*1,0]) {
 
 
 				//MusicBox();
