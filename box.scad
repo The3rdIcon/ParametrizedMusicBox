@@ -35,7 +35,6 @@
 use <MCAD/involute_gears.scad>
 use <write/Write.scad>
 
-
 // model config
 // Is this to generate models for 3D printing or for the assembled view?
 FOR_PRINT=1; // [0:Assembled, 1:PrintPlate]
