@@ -1,0 +1,9 @@
+.*
+!.gitignore
+*~
+.\#*
+\#*\#
+tunes
+*.pyc
+results
+resources
