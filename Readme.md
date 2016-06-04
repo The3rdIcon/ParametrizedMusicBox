@@ -4,7 +4,7 @@ The midiToNote python file can be run as follows
 python midiToNote.py <midi file name> <track in midi to encode>
 ```
 ```
-python app.py hot_cross_buns.mid 1
+python midiToNote.py hot_cross_buns.mid 1
 
 Could not find name of track
 ***********_******
